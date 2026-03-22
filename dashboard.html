@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DebateAI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET & ROOT ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --surface:#111118;
+  --surface2:#16161f;
+  --surface3:#1c1c28;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --border3:rgba(255,255,255,0.18);
+  --text:#f0f0f8;
+  --text2:#b0b0c8;
+  --muted:#666680;
+  --accent:#7c6aff;
+  --accent2:#9d8fff;
+  --accent-dim:rgba(124,106,255,0.12);
+  --accent-glow:rgba(124,106,255,0.25);
+  --success:#34d399;
+  --success-dim:rgba(52,211,153,0.12);
+  --error:#f87171;
+  --error-dim:rgba(248,113,113,0.12);
+  --warning:#fbbf24;
+  --warning-dim:rgba(251,191,36,0.1);
+  --r:14px;
+  --r-sm:8px;
+  --r-lg:18px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ─── SCROLLBAR ─────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:4px}
+
+/* ─── LAYOUT ────────────────────────────────────────────── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ─── SIDEBAR ───────────────────────────────────────────── */
+.sidebar{
+  width:228px;min-width:228px;background:var(--surface);
+  border-right:0.5px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  position:relative;z-index:10;
+}
+.sidebar::after{
+  content:'';position:absolute;top:0;right:0;width:0.5px;height:100%;
+  background:linear-gradient(to bottom,transparent,var(--border3) 20%,var(--border3) 80%,transparent);
+}
+.logo{
+  padding:22px 20px 18px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:0.5px solid var(--border);
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;
+  box-shadow:0 0 18px var(--accent-glow);
+}
+.logo-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.logo-name em{color:var(--accent);font-style:normal}
+
+.nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-section{
+  font-size:10px;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--muted);padding:14px 20px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 18px;font-size:13.5px;color:var(--text2);
+  cursor:pointer;border-radius:0;transition:all .15s;
+  position:relative;user-select:none;
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--accent);background:var(--accent-dim)}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);border-radius:0 3px 3px 0;
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.nav-item .badge-dot{
+  margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--accent);
+}
+.nav-icon{width:16px;height:16px;flex-shrink:0;opacity:.65}
+.nav-item.active .nav-icon{opacity:1}
+
+.sidebar-footer{
+  padding:14px 16px;border-top:0.5px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--accent-dim);border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;
+}
+.avatar-info{flex:1;min-width:0}
+.avatar-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar-level{font-size:11px;color:var(--muted)}
+.settings-btn{
+  width:26px;height:26px;border-radius:6px;border:0.5px solid var(--border2);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  transition:all .15s;flex-shrink:0;
+}
+.settings-btn:hover{background:var(--surface3);color:var(--text)}
+
+/* ─── MAIN ──────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+.topbar{
+  padding:0 28px;height:56px;min-height:56px;
+  background:var(--surface);border-bottom:0.5px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:5;
+}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.breadcrumb{font-size:13px;color:var(--muted)}
+.page-title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 15px;border-radius:var(--r-sm);
+  font-size:13px;font-family:inherit;font-weight:500;
+  cursor:pointer;border:none;transition:all .15s;
+  white-space:nowrap;
+}
+.btn-primary{
+  background:var(--accent);color:#fff;
+  box-shadow:0 0 16px var(--accent-glow);
+}
+.btn-primary:hover{background:#6b59e8;box-shadow:0 0 22px var(--accent-glow)}
+.btn-primary:active{transform:scale(.98)}
+.btn-ghost{
+  background:transparent;color:var(--text2);
+  border:0.5px solid var(--border2);
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.05);color:var(--text);border-color:var(--border3)}
+.btn-success{background:var(--success-dim);color:var(--success);border:0.5px solid rgba(52,211,153,0.2)}
+.btn-success:hover{background:rgba(52,211,153,0.2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:28px}
+
+/* SCREEN visibility */
+.screen{display:none;animation:fadeUp .25s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── BADGES ────────────────────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.badge-win{background:var(--success-dim);color:var(--success)}
+.badge-loss{background:var(--error-dim);color:var(--error)}
+.badge-easy{background:var(--success-dim);color:var(--success)}
+.badge-medium{background:var(--warning-dim);color:var(--warning)}
+.badge-hard{background:var(--error-dim);color:var(--error)}
+.badge-new{background:var(--accent-dim);color:var(--accent)}
+.badge-daily{
+  background:linear-gradient(90deg,rgba(251,191,36,.15),rgba(124,106,255,.15));
+  color:var(--warning);border:0.5px solid rgba(251,191,36,.2);
+}
+
+/* ─── CARDS ─────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:20px 22px;
+}
+.card-sm{padding:14px 16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text)}
+.card-action{font-size:12px;color:var(--accent);cursor:pointer;transition:.15s}
+.card-action:hover{color:var(--accent2)}
+
+/* ─── DASHBOARD ─────────────────────────────────────────── */
+.welcome-section{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:26px;
+}
+.welcome-text h1{
+  font-family:'Syne',sans-serif;font-size:26px;font-weight:800;
+  letter-spacing:-0.8px;line-height:1.2;margin-bottom:5px;
+}
+.welcome-text h1 .hi{color:var(--accent)}
+.welcome-text p{font-size:13.5px;color:var(--text2)}
+.welcome-meta{display:flex;align-items:center;gap:10px;margin-top:2px}
+.streak-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(124,106,255,.08));
+  border:0.5px solid rgba(251,191,36,.25);
+  padding:6px 14px;border-radius:20px;
+}
+.streak-chip span{font-size:13px;font-weight:600;color:var(--warning)}
+.welcome-cta{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.time-label{font-size:11px;color:var(--muted)}
+
+/* STATS ROW */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-bottom:22px;
+}
+.stat-card{
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;
+  position:relative;overflow:hidden;transition:border-color .2s;
+}
+.stat-card:hover{border-color:var(--border3)}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--glow-color,transparent) 0%,transparent 60%);
+  opacity:.06;pointer-events:none;border-radius:var(--r);
+}
+.stat-card.green{--glow-color:var(--success)}
+.stat-card.purple{--glow-color:var(--accent)}
+.stat-card.amber{--glow-color:var(--warning)}
+.stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px}
+.stat-val{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+.stat-val.c-green{color:var(--success)}
+.stat-val.c-purple{color:var(--accent)}
+.stat-val.c-amber{color:var(--warning)}
+.stat-delta{font-size:11px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:4px}
+.stat-delta.up{color:var(--success)}
+.stat-delta.down{color:var(--error)}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+
+/* DAILY CHALLENGE */
+.daily-card{
+  background:var(--surface3);
+  border:0.5px solid rgba(124,106,255,.25);
+  border-radius:var(--r);padding:20px 22px;
+  margin-bottom:14px;position:relative;overflow:hidden;
+}
+.daily-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,106,255,.12),transparent 70%);
+  pointer-events:none;
+}
+.daily-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--warning);font-weight:700;margin-bottom:10px;
+}
+.daily-topic{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  color:var(--text);margin-bottom:14px;line-height:1.3;
+}
+.daily-meta{display:flex;align-items:center;gap:8px}
+.daily-meta .sep{color:var(--muted);font-size:12px}
+.attempts{font-size:12px;color:var(--muted)}
+
+/* RECENT DEBATES */
+.debate-row{
+  display:flex;align-items:center;
+  padding:11px 0;border-bottom:0.5px solid var(--border);
+  gap:12px;cursor:pointer;transition:.15s;
+}
+.debate-row:last-child{border-bottom:none}
+.debate-row:hover{padding-left:4px}
+.debate-info{flex:1;min-width:0}
+.debate-topic{
+  font-size:13.5px;font-weight:500;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:3px;
+}
+.debate-sub{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.debate-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.score-num{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+
+/* RIGHT COLUMN */
+.right-col{display:flex;flex-direction:column;gap:14px}
+
+/* TOPIC CHIPS */
+.topics-wrap{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.topic-chip{
+  background:var(--surface2);border:0.5px solid var(--border);
+  border-radius:var(--r-sm);padding:9px 12px;font-size:12px;
+  color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;gap:7px;transition:all .15s;
+}
+.topic-chip:hover{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
+.topic-emoji{font-size:15px;line-height:1}
+
+/* SCORE CHART */
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:72px;padding-top:4px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.bar-body{
+  width:100%;border-radius:4px 4px 0 0;
+  transition:height .4s ease;
+}
+.bar-body.accent-bar{background:var(--accent-dim);border:0.5px solid rgba(124,106,255,.3)}
+.bar-body.green-bar{background:var(--success-dim);border:0.5px solid rgba(52,211,153,.3)}
+.bar-lbl{font-size:9.5px;color:var(--muted)}
+
+/* MINI WIN RATE RING */
+.win-ring-wrap{display:flex;align-items:center;gap:14px}
+.ring-svg{flex-shrink:0}
+.ring-text{font-size:12px;color:var(--text2)}
+.ring-text strong{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--success);display:block}
+
+/* ─── NEW DEBATE SCREEN ──────────────────────────────────── */
+.nd-header{margin-bottom:24px}
+.nd-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.nd-header p{font-size:13px;color:var(--text2)}
+
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step-dot{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;border:1.5px solid var(--border2);
+  color:var(--muted);transition:all .25s;flex-shrink:0;
+}
+.step-dot.done{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 10px var(--accent-glow)}
+.step-dot.current{border-color:var(--accent);color:var(--accent)}
+.step-line{flex:1;height:1px;background:var(--border2);transition:.25s}
+.step-line.done{background:var(--accent)}
+.step-meta{display:flex;justify-content:space-between;margin-top:6px;margin-bottom:24px}
+.step-lbl{font-size:10px;color:var(--muted);text-align:center;width:30px}
+.step-lbl.active{color:var(--accent)}
+
+.cat-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.cat-tab{
+  padding:5px 13px;border-radius:20px;font-size:12px;
+  background:var(--surface2);color:var(--text2);
+  border:0.5px solid var(--border);cursor:pointer;transition:.15s;
+}
+.cat-tab.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(124,106,255,.3)}
+.cat-tab:hover:not(.active){background:var(--surface3);color:var(--text)}
+
+.topic-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.topic-card{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;
+}
+.topic-card:hover,.topic-card.selected{
+  border-color:var(--accent);background:var(--accent-dim);
+}
+.topic-card .tc-icon{font-size:24px;margin-bottom:8px}
+.topic-card .tc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.topic-card .tc-cat{font-size:11px;color:var(--muted)}
+
+.custom-input{
+  width:100%;background:var(--surface2);border:0.5px solid var(--border2);
+  border-radius:10px;padding:11px 16px;color:var(--text);font-size:13px;
+  font-family:inherit;margin-bottom:20px;transition:border-color .15s;
+}
+.custom-input:focus{outline:none;border-color:var(--accent)}
+.custom-input::placeholder{color:var(--muted)}
+
+.side-options{display:flex;gap:14px;margin-bottom:24px}
+.side-opt{
+  flex:1;padding:22px 18px;border-radius:var(--r);
+  border:1.5px solid var(--border);cursor:pointer;transition:all .15s;
+  text-align:center;
+}
+.side-opt:hover,.side-opt.selected{border-color:var(--accent);background:var(--accent-dim)}
+.side-opt .so-emoji{font-size:28px;margin-bottom:10px}
+.side-opt .so-label{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:5px}
+.side-opt.for-opt .so-label{color:var(--success)}
+.side-opt.against-opt .so-label{color:var(--error)}
+.side-opt .so-desc{font-size:12px;color:var(--text2)}
+
+.diff-options{display:flex;gap:12px;margin-bottom:24px}
+.diff-opt{
+  flex:1;padding:18px;border-radius:var(--r);
+  border:1.5px solid var(--border);cursor:pointer;transition:all .15s;
+}
+.diff-opt:hover,.diff-opt.selected{border-color:var(--accent);background:var(--accent-dim)}
+.diff-opt .do-name{font-size:14px;font-weight:700;margin-bottom:5px}
+.diff-opt .do-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.diff-opt.easy .do-name{color:var(--success)}
+.diff-opt.medium .do-name{color:var(--warning)}
+.diff-opt.hard .do-name{color:var(--error)}
+
+.rounds-row{display:flex;gap:8px;margin-bottom:24px}
+.round-opt{
+  padding:9px 20px;border-radius:var(--r-sm);
+  border:1.5px solid var(--border);cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--muted);transition:.15s;
+}
+.round-opt.selected{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.round-opt:hover:not(.selected){border-color:var(--border3);color:var(--text)}
+
+.preview-card{
+  background:var(--surface2);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;margin-bottom:22px;
+}
+.preview-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:0.5px solid var(--border);font-size:13px;
+}
+.preview-row:last-child{border-bottom:none}
+.preview-key{color:var(--muted)}
+.preview-val{font-weight:500}
+
+.step-actions{display:flex;justify-content:flex-end;gap:10px}
+
+/* ─── DEBATE ROOM ────────────────────────────────────────── */
+.debate-topbar{
+  padding:12px 22px;background:var(--surface2);
+  border-bottom:0.5px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dt-topic{font-size:13.5px;font-weight:600;color:var(--text)}
+.dt-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.dt-right{display:flex;align-items:center;gap:10px}
+.round-pill{
+  background:var(--accent-dim);color:var(--accent);
+  font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;
+  border:0.5px solid rgba(124,106,255,.25);
+}
+.timer-pill{
+  background:var(--warning-dim);color:var(--warning);
+  font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;
+  border:0.5px solid rgba(251,191,36,.2);
+  font-family:'Syne',sans-serif;
+}
+.timer-pill.urgent{color:var(--error);background:var(--error-dim);border-color:rgba(248,113,113,.2);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.round-progress{
+  display:flex;gap:4px;padding:10px 22px;
+  background:var(--surface2);border-bottom:0.5px solid var(--border);
+}
+.rp-seg{flex:1;height:4px;border-radius:2px;background:var(--border2)}
+.rp-seg.done{background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+.rp-seg.current{background:var(--warning)}
+
+.chat-wrap{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.msg-row{display:flex;flex-direction:column}
+.msg-row.user{align-items:flex-end}
+.msg-label{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:5px}
+.bubble{
+  padding:12px 16px;border-radius:14px;
+  font-size:13.5px;line-height:1.55;max-width:68%;
+}
+.msg-row.ai .bubble{
+  background:var(--surface3);border:0.5px solid var(--border2);
+  color:var(--text);border-radius:4px 14px 14px 14px;
+}
+.msg-row.user .bubble{
+  background:var(--accent);color:#fff;
+  border-radius:14px 4px 14px 14px;
+}
+.strength-bar{
+  display:flex;align-items:center;gap:7px;margin-top:7px;
+}
+.sb-label{font-size:10px;color:var(--muted)}
+.sb-track{width:90px;height:3px;background:var(--border2);border-radius:2px}
+.sb-fill{height:100%;border-radius:2px;background:var(--warning)}
+.sb-val{font-size:10px;color:var(--warning);font-weight:600}
+
+.typing-bubble{
+  padding:12px 16px;background:var(--surface3);border:0.5px solid var(--border2);
+  border-radius:4px 14px 14px 14px;display:flex;gap:5px;align-items:center;
+  width:fit-content;
+}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:tdot 1.2s ease-in-out infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
+
+.hint-bar{
+  padding:8px 22px;border-top:0.5px solid var(--border);
+  display:flex;align-items:center;gap:10px;background:var(--surface);
+  font-size:12px;color:var(--muted);
+}
+.hint-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--warning-dim);color:var(--warning);
+  border:0.5px solid rgba(251,191,36,.25);
+  padding:4px 11px;border-radius:20px;font-size:12px;
+  cursor:pointer;transition:.15s;font-family:inherit;
+}
+.hint-btn:hover{background:rgba(251,191,36,.2)}
+.hint-box{
+  margin-top:8px;padding:10px 14px;
+  background:var(--warning-dim);border:0.5px solid rgba(251,191,36,.2);
+  border-radius:var(--r-sm);font-size:12.5px;color:var(--text2);
+  display:none;
+}
+.hint-box.show{display:block}
+
+.input-zone{
+  padding:14px 22px;border-top:0.5px solid var(--border);
+  background:var(--surface);
+}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.debate-textarea{
+  flex:1;background:var(--surface2);border:0.5px solid var(--border2);
+  border-radius:10px;padding:10px 14px;color:var(--text);
+  font-size:13px;font-family:inherit;resize:none;
+  min-height:44px;max-height:100px;transition:border-color .15s;line-height:1.55;
+}
+.debate-textarea:focus{outline:none;border-color:var(--accent)}
+.debate-textarea::placeholder{color:var(--muted)}
+.send-btn{
+  width:40px;height:40px;border-radius:10px;background:var(--accent);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:.15s;box-shadow:0 0 12px var(--accent-glow);
+}
+.send-btn:hover{background:#6b59e8;transform:scale(1.05)}
+.send-btn:active{transform:scale(.96)}
+.char-meta{font-size:11px;color:var(--muted);margin-top:5px;text-align:right}
+
+.debate-screen-inner{
+  display:flex;flex-direction:column;
+  height:calc(100vh - 56px);overflow:hidden;
+}
+
+/* ─── RESULTS SCREEN ─────────────────────────────────────── */
+.result-winner{
+  text-align:center;padding:28px 20px;
+  background:var(--success-dim);
+  border:0.5px solid rgba(52,211,153,.22);
+  border-radius:var(--r-lg);margin-bottom:20px;
+}
+.result-winner.lose{
+  background:var(--error-dim);
+  border-color:rgba(248,113,113,.22);
+}
+.result-tag{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:8px}
+.result-winner .result-tag{color:var(--success)}
+.result-winner.lose .result-tag{color:var(--error)}
+.result-headline{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-.8px;margin-bottom:5px}
+.result-winner .result-headline{color:var(--success)}
+.result-winner.lose .result-headline{color:var(--error)}
+.result-meta{font-size:12.5px;color:var(--text2)}
+
+.score-row{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:18px}
+.score-side{
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:22px;text-align:center;
+}
+.score-side-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:8px}
+.score-big{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1}
+.score-side.you .score-big{color:var(--success)}
+.score-side.ai .score-big{color:var(--error)}
+.vs-lbl{font-size:13px;font-weight:600;color:var(--muted);text-align:center}
+
+.feedback-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.fb-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.fb-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.fb-label.green{color:var(--success)}
+.fb-label.red{color:var(--error)}
+.fb-item{font-size:12.5px;color:var(--text2);padding:4px 0;display:flex;gap:8px;line-height:1.45}
+.fb-item::before{content:'›';color:var(--accent);font-size:14px;margin-top:-1px}
+
+.best-arg{
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:16px 20px;margin-bottom:18px;
+}
+.best-arg-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700;margin-bottom:10px}
+.best-arg blockquote{
+  font-size:13.5px;color:var(--text2);font-style:italic;
+  background:var(--accent-dim);border:0.5px solid rgba(124,106,255,.2);
+  border-radius:var(--r-sm);padding:11px 16px;line-height:1.55;
+}
+
+.result-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ─── PROFILE ────────────────────────────────────────────── */
+.profile-hero{
+  display:flex;align-items:center;gap:20px;
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:var(--r-lg);padding:24px 26px;margin-bottom:20px;
+}
+.profile-avatar-lg{
+  width:66px;height:66px;border-radius:50%;
+  background:var(--accent-dim);border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);
+  flex-shrink:0;
+}
+.profile-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.4px}
+.profile-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.edit-btn{
+  margin-left:auto;background:transparent;border:0.5px solid var(--border2);
+  color:var(--muted);padding:6px 13px;border-radius:var(--r-sm);
+  cursor:pointer;font-size:12px;font-family:inherit;transition:.15s;
+}
+.edit-btn:hover{border-color:var(--border3);color:var(--text)}
+
+.achievements-grid{display:flex;gap:10px;flex-wrap:wrap}
+.achievement{
+  background:var(--surface2);border:0.5px solid var(--border);
+  border-radius:var(--r);padding:13px 15px;
+  display:flex;align-items:center;gap:11px;
+  min-width:155px;transition:all .15s;
+}
+.achievement:hover{border-color:var(--border3)}
+.achievement.locked{opacity:.3;filter:grayscale(1)}
+.ach-icon-wrap{font-size:20px;line-height:1}
+.ach-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px}
+.ach-desc{font-size:11px;color:var(--muted)}
+
+.topic-perf{display:flex;flex-direction:column;gap:8px}
+.tp-row{display:flex;align-items:center;gap:10px}
+.tp-name{font-size:12.5px;color:var(--text2);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-track{flex:1;height:6px;background:var(--border2);border-radius:3px;overflow:hidden}
+.tp-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .5s ease}
+.tp-pct{font-size:11px;color:var(--muted);width:34px;text-align:right}
+
+/* ─── HISTORY ────────────────────────────────────────────── */
+.history-filters{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.search-box{
+  flex:1;min-width:200px;background:var(--surface2);
+  border:0.5px solid var(--border2);border-radius:var(--r-sm);
+  padding:8px 14px;color:var(--text);font-size:13px;font-family:inherit;
+}
+.search-box:focus{outline:none;border-color:var(--accent)}
+.search-box::placeholder{color:var(--muted)}
+
+.history-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 18px;border:0.5px solid var(--border);
+  border-radius:var(--r);background:var(--surface);
+  margin-bottom:8px;cursor:pointer;transition:all .15s;
+}
+.history-item:hover{border-color:var(--border3);background:var(--surface2)}
+.hi-icon{
+  width:38px;height:38px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  background:var(--surface3);flex-shrink:0;
+}
+.hi-info{flex:1;min-width:0}
+.hi-topic{font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hi-meta{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.hi-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hi-score{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:18px}
+.page-btn{
+  width:32px;height:32px;border-radius:var(--r-sm);
+  border:0.5px solid var(--border2);background:transparent;
+  color:var(--text2);font-size:12.5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;
+}
+.page-btn.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(124,106,255,.3)}
+.page-btn:hover:not(.active){background:var(--surface3);color:var(--text)}
+
+/* ─── LEADERBOARD ────────────────────────────────────────── */
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table th{
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;
+  color:var(--muted);font-weight:500;
+  padding:0 0 12px;text-align:left;border-bottom:0.5px solid var(--border);
+}
+.lb-table th:not(:first-child){text-align:right}
+.lb-table td{
+  padding:11px 0;border-bottom:0.5px solid var(--border);
+  font-size:13px;color:var(--text2);
+}
+.lb-table td:not(:first-child){text-align:right}
+.lb-table tr:last-child td{border-bottom:none}
+.lb-table tr.me td{color:var(--accent);font-weight:600;background:var(--accent-dim)}
+.lb-table tr.me td:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+.lb-table tr.me td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.rank-medal{font-size:14px}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+@media(max-width:900px){
+  .sidebar{width:60px;min-width:60px}
+  .logo-name,.nav-section,.avatar-info,.settings-btn,.nav-item span:not(.nav-icon){display:none}
+  .logo{justify-content:center;padding:18px 0}
+  .nav-item{justify-content:center;padding:12px 0}
+  .sidebar-footer{justify-content:center;padding:12px 0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .main-grid{grid-template-columns:1fr}
+  .topic-cards{grid-template-columns:1fr 1fr}
+  .feedback-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">D</div>
+      <div class="logo-name">Debate<em>AI</em></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" data-screen="dashboard" onclick="showScreen('dashboard',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-screen="new-debate" onclick="showScreen('new-debate',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        <span>New Debate</span>
+      </div>
+      <div class="nav-item" data-screen="debate-room" onclick="showScreen('debate-room',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"/><path d="M5 12v2M11 12v2"/></svg>
+        <span>Debate Room</span><span class="badge-dot"></span>
+      </div>
+      <div class="nav-item" data-screen="results" onclick="showScreen('results',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,11 5.5,6.5 8.5,8.5 13,3"/><path d="M1 15h14"/></svg>
+        <span>Results</span>
+      </div>
+      <div class="nav-item" data-screen="practice" onclick="showScreen('practice',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L2 6v8h4v-4h4v4h4V6L8 2z"/></svg>
+        <span>Practice</span>
+      </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-screen="profile" onclick="showScreen('profile',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6"/></svg>
+        <span>Profile</span>
+      </div>
+      <div class="nav-item" data-screen="history" onclick="showScreen('history',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 4V8l3 3"/><circle cx="8" cy="8" r="6"/></svg>
+        <span>History</span>
+      </div>
+      <div class="nav-item" data-screen="leaderboard" onclick="showScreen('leaderboard',this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="8" width="4" height="6" rx="1"/><rect x="6" y="5" width="4" height="9" rx="1"/><rect x="11" y="2" width="4" height="12" rx="1"/></svg>
+        <span>Leaderboard</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar">MN</div>
+      <div class="avatar-info">
+        <div class="avatar-name">Manu Naik</div>
+        <div class="avatar-level">Level 3 Debater</div>
+      </div>
+      <button class="settings-btn" onclick="showScreen('settings',document.querySelector('[data-screen=settings]'))">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+  <div class="main">
+
+    <!-- ─── DASHBOARD ──────────────────────────────────── -->
+    <div id="screen-dashboard" class="screen active">
+      <div class="topbar">
+        <div class="page-title">Dashboard</div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost btn-sm" onclick="showScreen('practice',document.querySelector('[data-screen=practice]'))">Practice Mode</button>
+          <button class="btn btn-primary btn-sm" onclick="showScreen('new-debate',document.querySelector('[data-screen=new-debate]'))">+ New Debate</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="welcome-section">
+          <div class="welcome-text">
+            <h1>Welcome back, <span class="hi">Manu</span> 👋</h1>
+            <p>Ready to sharpen those arguments? You're on a roll.</p>
+            <div class="welcome-meta" style="margin-top:10px">
+              <div class="streak-chip"><span>🔥 4-day streak</span></div>
+              <span class="badge badge-new">+3 this week</span>
+            </div>
+          </div>
+          <div class="welcome-cta">
+            <div class="time-label" id="live-time"></div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Debates</div>
+            <div class="stat-val">24</div>
+            <div class="stat-delta up">↑ 3 this week</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-val c-green">67%</div>
+            <div class="stat-delta up">↑ +5% from last week</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">Avg Score</div>
+            <div class="stat-val c-purple">7.4</div>
+            <div class="stat-delta">out of 10</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Best Score</div>
+            <div class="stat-val c-amber">9.2</div>
+            <div class="stat-delta">Hard difficulty</div>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <!-- Left column -->
+          <div>
+            <div class="daily-card">
+              <div class="daily-tag">⚡ Daily Challenge</div>
+              <div class="daily-topic">"AI will eliminate more jobs than it creates in the next decade"</div>
+              <div class="daily-meta">
+                <span class="badge badge-hard">Hard</span>
+                <span class="sep">·</span>
+                <span class="badge badge-daily">5 rounds</span>
+                <span class="sep">·</span>
+                <span class="attempts">623 attempts today</span>
+                <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="showScreen('new-debate',document.querySelector('[data-screen=new-debate]'))">Accept →</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Recent Debates</div>
+                <div class="card-action" onclick="showScreen('history',document.querySelector('[data-screen=history]'))">See all →</div>
+              </div>
+              <div class="debate-row" onclick="showScreen('results',document.querySelector('[data-screen=results]'))">
+                <div class="debate-info">
+                  <div class="debate-topic">AI replacing jobs</div>
+                  <div class="debate-sub">Today <span class="badge badge-medium">Medium</span></div>
+                </div>
+                <div class="debate-right">
+                  <div class="score-num" style="color:var(--success)">8.1</div>
+                  <span class="badge badge-win">Win</span>
+                </div>
+              </div>
+              <div class="debate-row">
+                <div class="debate-info">
+                  <div class="debate-topic">Mandatory voting should be law</div>
+                  <div class="debate-sub">Yesterday <span class="badge badge-hard">Hard</span></div>
+                </div>
+                <div class="debate-right">
+                  <div class="score-num" style="color:var(--error)">5.4</div>
+                  <span class="badge badge-loss">Loss</span>
+                </div>
+              </div>
+              <div class="debate-row">
+                <div class="debate-info">
+                  <div class="debate-topic">Social media harms mental health</div>
+                  <div class="debate-sub">2d ago <span class="badge badge-easy">Easy</span></div>
+                </div>
+                <div class="debate-right">
+                  <div class="score-num" style="color:var(--success)">9.2</div>
+                  <span class="badge badge-win">Win</span>
+                </div>
+              </div>
+              <div class="debate-row">
+                <div class="debate-info">
+                  <div class="debate-topic">Remote work is more productive</div>
+                  <div class="debate-sub">3d ago <span class="badge badge-medium">Medium</span></div>
+                </div>
+                <div class="debate-right">
+                  <div class="score-num" style="color:var(--success)">7.8</div>
+                  <span class="badge badge-win">Win</span>
+                </div>
+              </div>
+              <div class="debate-row">
+                <div class="debate-info">
+                  <div class="debate-topic">Nuclear energy is the future</div>
+                  <div class="debate-sub">4d ago <span class="badge badge-hard">Hard</span></div>
+                </div>
+                <div class="debate-right">
+                  <div class="score-num" style="color:var(--success)">7.1</div>
+                  <span class="badge badge-win">Win</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div class="right-col">
+            <div class="card card-sm">
+              <div class="card-header"><div class="card-title">Score Trend (last 7)</div></div>
+              <div class="chart-bars">
+                <div class="bar-col"><div class="bar-body accent-bar" style="height:44px"></div><div class="bar-lbl">6.1</div></div>
+                <div class="bar-col"><div class="bar-body accent-bar" style="height:52px"></div><div class="bar-lbl">7.2</div></div>
+                <div class="bar-col"><div class="bar-body accent-bar" style="height:38px"></div><div class="bar-lbl">5.4</div></div>
+                <div class="bar-col"><div class="bar-body green-bar" style="height:66px"></div><div class="bar-lbl">9.2</div></div>
+                <div class="bar-col"><div class="bar-body green-bar" style="height:57px"></div><div class="bar-lbl">7.8</div></div>
+                <div class="bar-col"><div class="bar-body green-bar" style="height:51px"></div><div class="bar-lbl">7.1</div></div>
+                <div class="bar-col"><div class="bar-body green-bar" style="height:60px"></div><div class="bar-lbl">8.1</div></div>
+              </div>
+            </div>
+
+            <div class="card card-sm">
+              <div class="card-header"><div class="card-title">Win Rate</div></div>
+              <div class="win-ring-wrap">
+                <svg class="ring-svg" width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="#34d399" stroke-width="7"
+                    stroke-dasharray="175.9" stroke-dashoffset="58"
+                    stroke-linecap="round" transform="rotate(-90 34 34)"/>
+                  <text x="34" y="38" text-anchor="middle" fill="#34d399" font-family="Syne,sans-serif" font-size="14" font-weight="800">67%</text>
+                </svg>
+                <div class="ring-text">
+                  <strong>16 / 24</strong>
+                  debates won so far
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-sm">
+              <div class="card-header"><div class="card-title">Recommended Topics</div></div>
+              <div class="topics-wrap">
+                <div class="topic-chip"><span class="topic-emoji">🤖</span>Tech & AI</div>
+                <div class="topic-chip"><span class="topic-emoji">🎓</span>Education</div>
+                <div class="topic-chip"><span class="topic-emoji">🏛️</span>Politics</div>
+                <div class="topic-chip"><span class="topic-emoji">🌍</span>Environment</div>
+                <div class="topic-chip"><span class="topic-emoji">💼</span>Career</div>
+                <div class="topic-chip"><span class="topic-emoji">🧠</span>Philosophy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── NEW DEBATE ──────────────────────────────────── -->
+    <div id="screen-new-debate" class="screen">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="btn btn-ghost btn-sm" onclick="showScreen('dashboard',document.querySelector('[data-screen=dashboard]'))">← Back</button>
+          <div class="page-title">New Debate</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="nd-header">
+          <h2 id="nd-step-title">Choose Your Topic</h2>
+          <p id="nd-step-desc">Pick from 12 curated topics or type your own</p>
+        </div>
+
+        <div class="step-indicator">
+          <div class="step-dot done" id="sdot1">1</div>
+          <div class="step-line" id="sline1"></div>
+          <div class="step-dot" id="sdot2">2</div>
+          <div class="step-line" id="sline2"></div>
+          <div class="step-dot" id="sdot3">3</div>
+          <div class="step-line" id="sline3"></div>
+          <div class="step-dot" id="sdot4">4</div>
+        </div>
+
+        <!-- Step 1: Topic -->
+        <div id="nd-s1">
+          <div class="cat-tabs" id="catTabs">
+            <div class="cat-tab active" onclick="filterCat('All',this)">All</div>
+            <div class="cat-tab" onclick="filterCat('Tech',this)">Tech</div>
+            <div class="cat-tab" onclick="filterCat('Education',this)">Education</div>
+            <div class="cat-tab" onclick="filterCat('Society',this)">Society</div>
+            <div class="cat-tab" onclick="filterCat('Career',this)">Career</div>
+          </div>
+          <div class="topic-cards" id="topicCards">
+            <div class="topic-card selected" data-cat="Tech" onclick="pickTopic(this)"><div class="tc-icon">🤖</div><div class="tc-name">AI replacing jobs</div><div class="tc-cat">Tech</div></div>
+            <div class="topic-card" data-cat="Society" onclick="pickTopic(this)"><div class="tc-icon">📱</div><div class="tc-name">Social media harms society</div><div class="tc-cat">Society</div></div>
+            <div class="topic-card" data-cat="Education" onclick="pickTopic(this)"><div class="tc-icon">🎓</div><div class="tc-name">College degrees are overrated</div><div class="tc-cat">Education</div></div>
+            <div class="topic-card" data-cat="Career" onclick="pickTopic(this)"><div class="tc-icon">🏠</div><div class="tc-name">Remote work is the future</div><div class="tc-cat">Career</div></div>
+            <div class="topic-card" data-cat="Society" onclick="pickTopic(this)"><div class="tc-icon">⚡</div><div class="tc-name">Nuclear energy is the answer</div><div class="tc-cat">Society</div></div>
+            <div class="topic-card" data-cat="Society" onclick="pickTopic(this)"><div class="tc-icon">🗳️</div><div class="tc-name">Voting should be mandatory</div><div class="tc-cat">Society</div></div>
+            <div class="topic-card" data-cat="Tech" onclick="pickTopic(this)"><div class="tc-icon">🔒</div><div class="tc-name">Privacy vs national security</div><div class="tc-cat">Tech</div></div>
+            <div class="topic-card" data-cat="Education" onclick="pickTopic(this)"><div class="tc-icon">🏫</div><div class="tc-name">Homework should be banned</div><div class="tc-cat">Education</div></div>
+            <div class="topic-card" data-cat="Career" onclick="pickTopic(this)"><div class="tc-icon">💰</div><div class="tc-name">Universal basic income works</div><div class="tc-cat">Career</div></div>
+          </div>
+          <input class="custom-input" type="text" id="customTopic" placeholder="Or type a custom topic..."/>
+          <div class="step-actions">
+            <button class="btn btn-primary" onclick="ndNext(2)">Next: Choose Side →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Side -->
+        <div id="nd-s2" style="display:none">
+          <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Topic: <strong id="selectedTopicLabel" style="color:var(--text)">AI replacing jobs</strong></p>
+          <div class="side-options">
+            <div class="side-opt for-opt selected" onclick="pickSide(this,'For')">
+              <div class="so-emoji">✅</div>
+              <div class="so-label">FOR</div>
+              <div class="so-desc">Argue in support of the topic</div>
+            </div>
+            <div class="side-opt against-opt" onclick="pickSide(this,'Against')">
+              <div class="so-emoji">❌</div>
+              <div class="so-label">AGAINST</div>
+              <div class="so-desc">Argue in opposition to the topic</div>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button class="btn btn-ghost" onclick="ndNext(1)">← Back</button>
+            <button class="btn btn-primary" onclick="ndNext(3)">Next: Difficulty →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Difficulty & Rounds -->
+        <div id="nd-s3" style="display:none">
+          <div class="diff-options">
+            <div class="diff-opt easy" onclick="pickDiff(this,'Easy')">
+              <div class="do-name">Easy</div>
+              <div class="do-desc">Friendly, short arguments. Great for beginners and practice.</div>
+            </div>
+            <div class="diff-opt medium selected" onclick="pickDiff(this,'Medium')">
+              <div class="do-name">Medium</div>
+              <div class="do-desc">Logical arguments with real-world examples and context.</div>
+            </div>
+            <div class="diff-opt hard" onclick="pickDiff(this,'Hard')">
+              <div class="do-name">Hard</div>
+              <div class="do-desc">Data, statistics, ruthless rebuttals. No mercy.</div>
+            </div>
+          </div>
+          <div style="margin-bottom:24px">
+            <div class="card-title" style="margin-bottom:10px;font-size:13px">Number of Rounds</div>
+            <div class="rounds-row">
+              <div class="round-opt" onclick="pickRounds(this,3)">3</div>
+              <div class="round-opt selected" onclick="pickRounds(this,5)">5</div>
+              <div class="round-opt" onclick="pickRounds(this,7)">7</div>
+            </div>
+          </div>
+          <div class="step-actions">
+            <button class="btn btn-ghost" onclick="ndNext(2)">← Back</button>
+            <button class="btn btn-primary" onclick="ndNext(4)">Preview →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Preview -->
+        <div id="nd-s4" style="display:none">
+          <div class="preview-card">
+            <div class="preview-row"><span class="preview-key">Topic</span><span class="preview-val" id="pv-topic">AI replacing jobs</span></div>
+            <div class="preview-row"><span class="preview-key">Your side</span><span class="preview-val" style="color:var(--success)" id="pv-side">FOR</span></div>
+            <div class="preview-row"><span class="preview-key">Difficulty</span><span class="preview-val" style="color:var(--warning)" id="pv-diff">Medium</span></div>
+            <div class="preview-row"><span class="preview-key">Rounds</span><span class="preview-val" id="pv-rounds">5</span></div>
+            <div class="preview-row"><span class="preview-key">Hints available</span><span class="preview-val">3</span></div>
+          </div>
+          <div class="step-actions">
+            <button class="btn btn-ghost" onclick="ndNext(3)">← Back</button>
+            <button class="btn btn-primary" style="padding:10px 26px;font-size:14px" onclick="startDebate()">Begin Debate →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DEBATE ROOM ─────────────────────────────────── -->
+    <div id="screen-debate-room" class="screen">
+      <div class="debate-screen-inner">
+        <div class="debate-topbar">
+          <div>
+            <div class="dt-topic">AI replacing jobs</div>
+            <div class="dt-sub">You are arguing: <strong style="color:var(--success)">FOR</strong></div>
+          </div>
+          <div class="dt-right">
+            <span class="round-pill">Round <span id="cur-round">2</span> of 5</span>
+            <span class="timer-pill" id="timer">0:47</span>
+            <button class="btn btn-ghost btn-sm" style="color:var(--error);border-color:rgba(248,113,113,.25)" onclick="if(confirm('Forfeit this debate?'))showScreen('results',document.querySelector('[data-screen=results]'))">Forfeit</button>
+          </div>
+        </div>
+        <div class="round-progress">
+          <div class="rp-seg done"></div>
+          <div class="rp-seg current"></div>
+          <div class="rp-seg"></div>
+          <div class="rp-seg"></div>
+          <div class="rp-seg"></div>
+        </div>
+        <div class="chat-wrap" id="chatWrap">
+          <div class="msg-row ai">
+            <div class="msg-label">AI Opponent</div>
+            <div class="bubble">Automation has historically created more jobs than it displaced. The Industrial Revolution is the clearest proof — machines didn't end employment, they transformed it. Today's AI will follow the same pattern.</div>
+            <div class="strength-bar"><span class="sb-label">Argument strength</span><div class="sb-track"><div class="sb-fill" style="width:70%"></div></div><span class="sb-val">7/10</span></div>
+          </div>
+          <div class="msg-row user">
+            <div class="msg-label">You</div>
+            <div class="bubble">The Industrial Revolution required physical labor to adapt — workers could learn to operate machines. But generative AI can do cognitive work. A factory worker cannot compete with a model that codes, writes, and analyzes simultaneously.</div>
+          </div>
+          <div class="msg-row ai" id="typingRow">
+            <div class="msg-label">AI Opponent</div>
+            <div class="typing-bubble"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+          </div>
+        </div>
+        <div class="hint-bar">
+          <span>Hints: <strong id="hintCount">2</strong> remaining</span>
+          <button class="hint-btn" onclick="toggleHint()">💡 Need a hint?</button>
+          <div class="hint-box" id="hintBox">
+            Try arguing: <em>"History shows cognitive revolutions (printing press, calculators) always created new roles requiring uniquely human judgment — creativity, empathy, leadership."</em>
+          </div>
+        </div>
+        <div class="input-zone">
+          <div class="input-row">
+            <textarea class="debate-textarea" id="debateInput" placeholder="Type your argument... (Enter to send, Shift+Enter for newline)" oninput="updateChar()" onkeydown="handleKey(event)"></textarea>
+            <button class="send-btn" onclick="sendMsg()">
+              <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" viewBox="0 0 16 16"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
+            </button>
+          </div>
+          <div class="char-meta"><span id="charCount">0</span> / 500</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── RESULTS ─────────────────────────────────────── -->
+    <div id="screen-results" class="screen">
+      <div class="topbar">
+        <div class="page-title">Debate Results</div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost btn-sm" onclick="showScreen('dashboard',document.querySelector('[data-screen=dashboard]'))">← Dashboard</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="result-winner">
+          <div class="result-tag">Victory!</div>
+          <div class="result-headline">You Win 🎉</div>
+          <div class="result-meta">AI replacing jobs · Medium · 5 Rounds · 8m 32s</div>
+        </div>
+        <div class="score-row">
+          <div class="score-side you">
+            <div class="score-side-lbl">Your Score</div>
+            <div class="score-big">8.1</div>
+          </div>
+          <div class="vs-lbl">VS</div>
+          <div class="score-side ai">
+            <div class="score-side-lbl">AI Score</div>
+            <div class="score-big">6.4</div>
+          </div>
+        </div>
+        <div class="feedback-grid">
+          <div class="fb-card">
+            <div class="fb-label green">Your Strengths</div>
+            <div class="fb-item">Strong use of contemporary examples</div>
+            <div class="fb-item">Clear logical structure throughout</div>
+            <div class="fb-item">Effective rebuttals in rounds 3 & 4</div>
+          </div>
+          <div class="fb-card">
+            <div class="fb-label red">Areas to Improve</div>
+            <div class="fb-item">Cite specific statistics more often</div>
+            <div class="fb-item">Round 2 argument was too brief</div>
+            <div class="fb-item">Address counterpoints more directly</div>
+          </div>
+        </div>
+        <div class="best-arg">
+          <div class="best-arg-label">✨ Your Best Argument</div>
+          <blockquote>"A factory worker can't compete with a model that codes, writes, and analyzes simultaneously — the cognitive leap is categorically different from prior automation."</blockquote>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" onclick="showScreen('new-debate',document.querySelector('[data-screen=new-debate]'))">Try Another Topic</button>
+          <button class="btn btn-ghost">Rematch (flip sides)</button>
+          <button class="btn btn-ghost" onclick="copyResult()">Share Result</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROFILE ─────────────────────────────────────── -->
+    <div id="screen-profile" class="screen">
+      <div class="topbar"><div class="page-title">Profile</div></div>
+      <div class="content">
+        <div class="profile-hero">
+          <div class="profile-avatar-lg">MN</div>
+          <div>
+            <div class="profile-name">Manu Naik</div>
+            <div class="profile-sub">Member since Jan 2025 · Academic debate goal · Prefers Medium</div>
+          </div>
+          <button class="edit-btn">Edit Profile</button>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom:20px">
+          <div class="stat-card"><div class="stat-label">Total Debates</div><div class="stat-val">24</div></div>
+          <div class="stat-card green"><div class="stat-label">Win Rate</div><div class="stat-val c-green">67%</div></div>
+          <div class="stat-card purple"><div class="stat-label">Avg Score</div><div class="stat-val c-purple">7.4</div></div>
+          <div class="stat-card amber"><div class="stat-label">Win Streak</div><div class="stat-val c-amber">4🔥</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Topic Performance</div></div>
+            <div class="topic-perf">
+              <div class="tp-row"><span class="tp-name">Tech & AI</span><div class="tp-track"><div class="tp-fill" style="width:85%"></div></div><span class="tp-pct">85%</span></div>
+              <div class="tp-row"><span class="tp-name">Society</span><div class="tp-track"><div class="tp-fill" style="width:70%"></div></div><span class="tp-pct">70%</span></div>
+              <div class="tp-row"><span class="tp-name">Education</span><div class="tp-track"><div class="tp-fill" style="width:60%"></div></div><span class="tp-pct">60%</span></div>
+              <div class="tp-row"><span class="tp-name">Career</span><div class="tp-track"><div class="tp-fill" style="width:55%"></div></div><span class="tp-pct">55%</span></div>
+              <div class="tp-row"><span class="tp-name">Environment</span><div class="tp-track"><div class="tp-fill" style="width:45%"></div></div><span class="tp-pct">45%</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Difficulty Breakdown</div></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--success)">Easy</span><span style="color:var(--muted)">8W / 2L</span></div>
+                <div style="height:6px;background:var(--border2);border-radius:3px"><div style="height:100%;width:80%;background:var(--success);border-radius:3px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--warning)">Medium</span><span style="color:var(--muted)">6W / 4L</span></div>
+                <div style="height:6px;background:var(--border2);border-radius:3px"><div style="height:100%;width:60%;background:var(--warning);border-radius:3px"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--error)">Hard</span><span style="color:var(--muted)">2W / 2L</span></div>
+                <div style="height:6px;background:var(--border2);border-radius:3px"><div style="height:100%;width:50%;background:var(--error);border-radius:3px"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Achievements</div></div>
+          <div class="achievements-grid">
+            <div class="achievement"><div class="ach-icon-wrap">🥊</div><div><div class="ach-name">First Debate</div><div class="ach-desc">Complete 1 debate</div></div></div>
+            <div class="achievement"><div class="ach-icon-wrap">🔥</div><div><div class="ach-name">On a Roll</div><div class="ach-desc">Win 3 in a row</div></div></div>
+            <div class="achievement"><div class="ach-icon-wrap">🎯</div><div><div class="ach-name">Sharp Debater</div><div class="ach-desc">Score 8+ five times</div></div></div>
+            <div class="achievement locked"><div class="ach-icon-wrap">💀</div><div><div class="ach-name">Hard Mode Hero</div><div class="ach-desc">Win on Hard</div></div></div>
+            <div class="achievement locked"><div class="ach-icon-wrap">🏆</div><div><div class="ach-name">Debate Master</div><div class="ach-desc">Complete 10 debates</div></div></div>
+            <div class="achievement locked"><div class="ach-icon-wrap">⭐</div><div><div class="ach-name">Perfect 10</div><div class="ach-desc">Score 10/10</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── HISTORY ─────────────────────────────────────── -->
+    <div id="screen-history" class="screen">
+      <div class="topbar">
+        <div class="page-title">Debate History</div>
+        <button class="btn btn-ghost btn-sm">Export CSV</button>
+      </div>
+      <div class="content">
+        <div class="history-filters">
+          <input class="search-box" type="text" placeholder="Search by topic..." oninput="filterHistory(this.value)"/>
+          <div class="cat-tabs" style="margin-bottom:0">
+            <div class="cat-tab active" onclick="filterResult('all',this)">All</div>
+            <div class="cat-tab" onclick="filterResult('win',this)">Wins</div>
+            <div class="cat-tab" onclick="filterResult('loss',this)">Losses</div>
+          </div>
+        </div>
+        <div id="historyList">
+          <div class="history-item" data-result="win" onclick="showScreen('results',document.querySelector('[data-screen=results]'))">
+            <div class="hi-icon">🤖</div>
+            <div class="hi-info">
+              <div class="hi-topic">AI replacing jobs</div>
+              <div class="hi-meta">Today · <span class="badge badge-medium">Medium</span> · 5 rounds · 8m 32s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-win">Win</span><span class="hi-score" style="color:var(--success)">8.1</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+          <div class="history-item" data-result="loss">
+            <div class="hi-icon">🗳️</div>
+            <div class="hi-info">
+              <div class="hi-topic">Mandatory voting should be law</div>
+              <div class="hi-meta">Yesterday · <span class="badge badge-hard">Hard</span> · 7 rounds · 14m 20s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-loss">Loss</span><span class="hi-score" style="color:var(--error)">5.4</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+          <div class="history-item" data-result="win">
+            <div class="hi-icon">📱</div>
+            <div class="hi-info">
+              <div class="hi-topic">Social media harms mental health</div>
+              <div class="hi-meta">2 days ago · <span class="badge badge-easy">Easy</span> · 3 rounds · 5m 10s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-win">Win</span><span class="hi-score" style="color:var(--success)">9.2</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+          <div class="history-item" data-result="win">
+            <div class="hi-icon">🏠</div>
+            <div class="hi-info">
+              <div class="hi-topic">Remote work is more productive</div>
+              <div class="hi-meta">3 days ago · <span class="badge badge-medium">Medium</span> · 5 rounds · 9m 45s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-win">Win</span><span class="hi-score" style="color:var(--success)">7.8</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+          <div class="history-item" data-result="win">
+            <div class="hi-icon">⚡</div>
+            <div class="hi-info">
+              <div class="hi-topic">Nuclear energy is the answer to climate change</div>
+              <div class="hi-meta">4 days ago · <span class="badge badge-hard">Hard</span> · 7 rounds · 16m 08s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-win">Win</span><span class="hi-score" style="color:var(--success)">7.1</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+          <div class="history-item" data-result="loss">
+            <div class="hi-icon">🧠</div>
+            <div class="hi-info">
+              <div class="hi-topic">Philosophy should be taught in schools</div>
+              <div class="hi-meta">5 days ago · <span class="badge badge-medium">Medium</span> · 5 rounds · 10m 22s</div>
+            </div>
+            <div class="hi-right"><span class="badge badge-loss">Loss</span><span class="hi-score" style="color:var(--error)">6.0</span><button class="btn btn-ghost btn-sm">View</button></div>
+          </div>
+        </div>
+        <div class="pagination">
+          <button class="page-btn">←</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── LEADERBOARD ─────────────────────────────────── -->
+    <div id="screen-leaderboard" class="screen">
+      <div class="topbar"><div class="page-title">Leaderboard</div></div>
+      <div class="content">
+        <div class="cat-tabs" style="margin-bottom:20px">
+          <div class="cat-tab active">All Time</div>
+          <div class="cat-tab">This Week</div>
+          <div class="cat-tab">This Month</div>
+        </div>
+        <div class="card">
+          <table class="lb-table">
+            <thead><tr>
+              <th>Rank</th><th>Name</th><th>Debates</th><th>Win Rate</th><th>Avg Score</th><th>Best</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><span class="rank-medal">🥇</span> 1</td><td>Arjun S.</td><td>87</td><td style="color:var(--success)">81%</td><td>8.9</td><td style="color:var(--warning)">10.0</td></tr>
+              <tr><td><span class="rank-medal">🥈</span> 2</td><td>Priya K.</td><td>64</td><td style="color:var(--success)">78%</td><td>8.6</td><td style="color:var(--warning)">9.8</td></tr>
+              <tr><td><span class="rank-medal">🥉</span> 3</td><td>Rohit M.</td><td>52</td><td style="color:var(--success)">75%</td><td>8.2</td><td style="color:var(--warning)">9.5</td></tr>
+              <tr><td>4</td><td>Sneha R.</td><td>41</td><td style="color:var(--success)">72%</td><td>7.9</td><td>9.1</td></tr>
+              <tr><td>5</td><td>Kiran D.</td><td>38</td><td style="color:var(--success)">70%</td><td>7.7</td><td>9.0</td></tr>
+              <tr><td>6</td><td>Aditya N.</td><td>35</td><td>68%</td><td>7.5</td><td>8.8</td></tr>
+              <tr class="me"><td>↑ 11</td><td>Manu N. (You)</td><td>24</td><td style="color:var(--success)">67%</td><td>7.4</td><td style="color:var(--warning)">9.2</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;padding:12px 16px;background:var(--accent-dim);border:0.5px solid rgba(124,106,255,.2);border-radius:var(--r-sm);font-size:12.5px;color:var(--text2)">
+          🎯 You need <strong style="color:var(--accent)">4 more wins</strong> to reach rank #10. Keep going!
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PRACTICE ─────────────────────────────────────── -->
+    <div id="screen-practice" class="screen">
+      <div class="topbar"><div class="page-title">Practice Mode</div></div>
+      <div class="content">
+        <div style="background:var(--success-dim);border:0.5px solid rgba(52,211,153,.2);border-radius:var(--r);padding:16px 20px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">🧘</span>
+          <div>
+            <div style="font-size:13.5px;font-weight:600;color:var(--success);margin-bottom:2px">No scoring. No pressure.</div>
+            <div style="font-size:12.5px;color:var(--text2)">Chat freely with the AI coach — learn techniques, explore angles, get feedback.</div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><div class="card-title">Choose a topic to explore</div></div>
+          <div class="topics-wrap">
+            <div class="topic-chip"><span class="topic-emoji">🤖</span>AI & Technology</div>
+            <div class="topic-chip"><span class="topic-emoji">🌍</span>Climate Change</div>
+            <div class="topic-chip"><span class="topic-emoji">🎓</span>Education Reform</div>
+            <div class="topic-chip"><span class="topic-emoji">💼</span>Work & Economy</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Suggested starting arguments</div></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <div style="padding:7px 13px;background:var(--surface2);border:0.5px solid var(--border);border-radius:20px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Try a historical analogy</div>
+            <div style="padding:7px 13px;background:var(--surface2);border:0.5px solid var(--border);border-radius:20px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Use a statistics-based argument</div>
+            <div style="padding:7px 13px;background:var(--surface2);border:0.5px solid var(--border);border-radius:20px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Appeal to human values</div>
+            <div style="padding:7px 13px;background:var(--surface2);border:0.5px solid var(--border);border-radius:20px;font-size:12.5px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Counter with an exception</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SETTINGS ─────────────────────────────────────── -->
+    <div id="screen-settings" class="screen">
+      <div class="topbar"><div class="page-title">Settings</div></div>
+      <div class="content">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><div class="card-title">Account</div></div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div><div style="font-size:13px;font-weight:500">Name</div><div style="font-size:12px;color:var(--muted)">Manu Naik</div></div>
+              <button class="btn btn-ghost btn-sm">Change</button>
+            </div>
+            <div style="border-top:0.5px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between">
+              <div><div style="font-size:13px;font-weight:500">Email</div><div style="font-size:12px;color:var(--muted)">manu@example.com</div></div>
+              <button class="btn btn-ghost btn-sm">Change</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><div class="card-title">Preferences</div></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:13px;color:var(--text2)">Default difficulty</span>
+              <div class="cat-tabs" style="margin-bottom:0">
+                <div class="cat-tab">Easy</div><div class="cat-tab active">Medium</div><div class="cat-tab">Hard</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:13px;color:var(--text2)">Default rounds</span>
+              <div style="display:flex;gap:6px">
+                <div class="round-opt" style="padding:4px 12px;font-size:12px">3</div>
+                <div class="round-opt selected" style="padding:4px 12px;font-size:12px">5</div>
+                <div class="round-opt" style="padding:4px 12px;font-size:12px">7</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:13px;color:var(--text2)">Theme</span>
+              <div class="cat-tabs" style="margin-bottom:0">
+                <div class="cat-tab active">Dark</div><div class="cat-tab">Light</div><div class="cat-tab">System</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(248,113,113,.2)">
+          <div class="card-header"><div class="card-title" style="color:var(--error)">Danger Zone</div></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-sm" style="background:var(--error-dim);color:var(--error);border:0.5px solid rgba(248,113,113,.25)" onclick="confirm('Delete all debate history? This cannot be undone.')">Delete History</button>
+            <button class="btn btn-sm" style="background:var(--error-dim);color:var(--error);border:0.5px solid rgba(248,113,113,.25)" onclick="confirm('Delete your account? This cannot be undone.')">Delete Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── SCREEN NAVIGATION ─────────────────────────────────
+function showScreen(id, navEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const scr = document.getElementById('screen-' + id);
+  if (scr) scr.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  if (id === 'debate-room') startTimer();
+}
+
+// ─── LIVE CLOCK ────────────────────────────────────────
+function updateClock() {
+  const el = document.getElementById('live-time');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── NEW DEBATE FLOW ───────────────────────────────────
+let ndState = { topic:'AI replacing jobs', side:'For', diff:'Medium', rounds:5, step:1 };
+
+function ndNext(n) {
+  for (let i=1;i<=4;i++) {
+    const el = document.getElementById('nd-s'+i);
+    if (el) el.style.display = i===n ? 'block' : 'none';
+  }
+  ndState.step = n;
+  const titles = ['','Choose Your Topic','Pick Your Side','Difficulty & Rounds','Review & Begin'];
+  const descs = ['','Pick from 12 curated topics or type your own','Which argument will you defend?','How tough should the AI opponent be?','Everything looks good? Let\'s go.'];
+  document.getElementById('nd-step-title').textContent = titles[n];
+  document.getElementById('nd-step-desc').textContent = descs[n];
+
+  // Update step dots
+  for (let i=1;i<=4;i++) {
+    const dot = document.getElementById('sdot'+i);
+    dot.classList.remove('done','current');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('current');
+  }
+  for (let i=1;i<=3;i++) {
+    const line = document.getElementById('sline'+i);
+    line.classList.toggle('done', i < n);
+  }
+  if (n === 4) {
+    // Populate preview
+    const ct = document.getElementById('customTopic').value.trim();
+    const t = ct || ndState.topic;
+    document.getElementById('pv-topic').textContent = t;
+    document.getElementById('pv-side').textContent = ndState.side;
+    document.getElementById('pv-side').style.color = ndState.side==='For'?'var(--success)':'var(--error)';
+    document.getElementById('pv-diff').textContent = ndState.diff;
+    document.getElementById('pv-diff').style.color = ndState.diff==='Easy'?'var(--success)':ndState.diff==='Medium'?'var(--warning)':'var(--error)';
+    document.getElementById('pv-rounds').textContent = ndState.rounds;
+    document.getElementById('selectedTopicLabel').textContent = t;
+  }
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll('#catTabs .cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.topic-card').forEach(c=>{
+    c.style.display = (cat==='All'||c.dataset.cat===cat) ? '' : 'none';
+  });
+}
+
+function pickTopic(el) {
+  document.querySelectorAll('.topic-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  ndState.topic = el.querySelector('.tc-name').textContent;
+}
+
+function pickSide(el, side) {
+  document.querySelectorAll('.side-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  ndState.side = side;
+}
+
+function pickDiff(el, diff) {
+  document.querySelectorAll('.diff-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  ndState.diff = diff;
+}
+
+function pickRounds(el, r) {
+  document.querySelectorAll('.round-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  ndState.rounds = r;
+}
+
+function startDebate() {
+  showScreen('debate-room', document.querySelector('[data-screen=debate-room]'));
+}
+
+// ─── DEBATE TIMER ──────────────────────────────────────
+let timerVal = 47, timerInt = null;
+
+function startTimer() {
+  clearInterval(timerInt);
+  timerVal = 47;
+  timerInt = setInterval(() => {
+    timerVal--;
+    if (timerVal < 0) { timerVal = 0; clearInterval(timerInt); }
+    const m = Math.floor(timerVal/60);
+    const s = timerVal % 60;
+    const el = document.getElementById('timer');
+    if (el) {
+      el.textContent = m+':'+(s<10?'0':'')+s;
+      el.classList.toggle('urgent', timerVal <= 10);
+    }
+  }, 1000);
+}
+
+// ─── DEBATE INPUT ──────────────────────────────────────
+function updateChar() {
+  const v = document.getElementById('debateInput').value;
+  document.getElementById('charCount').textContent = v.length;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function sendMsg() {
+  const ta = document.getElementById('debateInput');
+  const txt = ta.value.trim();
+  if (!txt) return;
+  const chat = document.getElementById('chatWrap');
+  const typingRow = document.getElementById('typingRow');
+
+  // Build user bubble
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `<div class="msg-label">You</div><div class="bubble">${txt.replace(/</g,'&lt;')}</div>`;
+  chat.insertBefore(row, typingRow);
+
+  ta.value = '';
+  document.getElementById('charCount').textContent = '0';
+
+  // Show typing, then respond
+  typingRow.style.display = 'flex';
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => {
+    const aiRow = document.createElement('div');
+    aiRow.className = 'msg-row ai';
+    const str = Math.floor(Math.random()*4)+5;
+    aiRow.innerHTML = `<div class="msg-label">AI Opponent</div>
+      <div class="bubble">That's a compelling point — but consider that even if AI handles cognitive tasks, it creates demand for roles overseeing, training, and auditing those systems. The net job displacement risk is overstated by those who ignore historical precedent.</div>
+      <div class="strength-bar"><span class="sb-label">Argument strength</span><div class="sb-track"><div class="sb-fill" style="width:${str*10}%"></div></div><span class="sb-val">${str}/10</span></div>`;
+    chat.insertBefore(aiRow, typingRow);
+    typingRow.style.display = 'none';
+    chat.scrollTop = chat.scrollHeight;
+    // Advance round if 2 exchanges done
+    const curRound = parseInt(document.getElementById('cur-round').textContent);
+    if (chat.querySelectorAll('.msg-row.user').length > curRound && curRound < 5) {
+      document.getElementById('cur-round').textContent = curRound + 1;
+      timerVal = 60;
+    }
+  }, 1800);
+}
+
+// ─── HINT ──────────────────────────────────────────────
+let hintOpen = false;
+function toggleHint() {
+  const box = document.getElementById('hintBox');
+  hintOpen = !hintOpen;
+  box.classList.toggle('show', hintOpen);
+  if (hintOpen) {
+    const cnt = document.getElementById('hintCount');
+    const v = parseInt(cnt.textContent);
+    if (v > 0) cnt.textContent = v - 1;
+  }
+}
+
+// ─── HISTORY FILTERS ───────────────────────────────────
+function filterHistory(q) {
+  const items = document.querySelectorAll('.history-item');
+  items.forEach(item => {
+    const topic = item.querySelector('.hi-topic').textContent.toLowerCase();
+    item.style.display = topic.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterResult(type, el) {
+  document.querySelectorAll('[onclick^=filterResult]').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.history-item').forEach(item => {
+    item.style.display = (type==='all'||item.dataset.result===type) ? '' : 'none';
+  });
+}
+
+// ─── SHARE RESULT ──────────────────────────────────────
+function copyResult() {
+  navigator.clipboard.writeText('DebateAI Result: Won vs AI on "AI replacing jobs" | Score: 8.1 vs 6.4 | Medium difficulty').then(()=>{
+    alert('Result copied to clipboard!');
+  }).catch(()=>{
+    alert('Result: Won vs AI on "AI replacing jobs" | Score: 8.1 vs 6.4 | Medium difficulty');
+  });
+}
+</script>
+</body>
+</html>
