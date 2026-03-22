@@ -7,8 +7,13 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// Firebase Admin init
-const serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT);
+// Firebase Admin init — supports file (local) or JSON string env var (Render)
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+} else {
+  serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT || './serviceAccountKey.json');
+}
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
 // MongoDB connect
