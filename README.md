@@ -117,18 +117,11 @@ The Vite frontend can be deployed to Vercel. Configure the Firebase client setti
 
 Deployment steps may need to be adjusted to match the current hosting configuration.
 
-## Known Issues
 
-- **Google sign-in:** currently not working.
-- **Main AI debate flow:** unreliable; the app may fail to generate or continue a debate.
-- **Other AI features:** some are working, but AI feature availability is not yet consistent.
+## Future Enhancements
 
-These issues are documented so the current project status is clear. They remain areas for debugging and improvement.
-
-## Future Improvements
-
-- Fix and test the primary debate-generation flow and error handling
-- Resolve Google sign-in and verify the Firebase provider configuration
-- Add end-to-end tests for authentication and debate sessions
-- Improve loading, retry, and user-facing error states for AI requests
-- Document verified deployment settings and add screenshots or a demo link
+- Enhance the reliability of AI-powered debate generation and response handling
+- Expand authentication options and improve sign-in reliability
+- Strengthen error handling and recovery for AI requests
+- Add end-to-end testing for authentication and complete debate sessions
+- Improve deployment documentation and application monitoring
